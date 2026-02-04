@@ -26,19 +26,28 @@ export default function LoginCard() {
 
   useEffect(() => {
     checkServer();
-  }, []);
+    const interval = setInterval(() => {
+      if (serverStatus === 'offline') {
+        checkServer();
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [serverStatus]);
 
   const checkServer = async () => {
     setServerStatus('checking');
     const isOnline = await api.checkServerStatus();
+    console.log('[LoginCard] Server status check result:', isOnline);
     setServerStatus(isOnline ? 'online' : 'offline');
   };
 
   const handlePing = async () => {
     try {
       const result = await ping();
+      setServerStatus('online');
       showToast(`pong ${result.ts?.slice(11, 19) || ''}`);
     } catch (e: any) {
+      setServerStatus('offline');
       showToast(e.message || 'Ping failed');
     }
   };
@@ -50,8 +59,12 @@ export default function LoginCard() {
     }
     try {
       await login({ username: username.trim(), passcode: passcode.trim() });
+      setServerStatus('online');
       showToast('Logged in');
     } catch (e: any) {
+      if (e.message?.toLowerCase().includes('network') || e.message?.toLowerCase().includes('fetch')) {
+        setServerStatus('offline');
+      }
       showToast(e.message || 'Login failed');
     }
   };
