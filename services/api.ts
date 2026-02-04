@@ -1,4 +1,5 @@
 const API_BASE_URL = 'https://customerdb.eposnorth.co.uk';
+const API_FALLBACK_URL = 'http://51.155.159.204:8787';
 
 interface ApiOptions extends RequestInit {
   body?: string;
@@ -72,10 +73,21 @@ class ApiService {
   async checkServerStatus(): Promise<boolean> {
     try {
       await this.ping();
+      console.log('[API] Primary server is online');
       return true;
     } catch (e) {
-      console.log('[API] Server status check failed:', e);
-      return false;
+      console.log('[API] Primary server failed, trying fallback:', e);
+      
+      try {
+        this.setBaseUrl(API_FALLBACK_URL);
+        await this.ping();
+        console.log('[API] Fallback server is online, switched to:', API_FALLBACK_URL);
+        return true;
+      } catch (fallbackError) {
+        console.log('[API] Fallback server also failed:', fallbackError);
+        this.setBaseUrl(API_BASE_URL);
+        return false;
+      }
     }
   }
 
