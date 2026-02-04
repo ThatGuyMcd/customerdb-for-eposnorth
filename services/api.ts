@@ -71,7 +71,10 @@ class ApiService {
   }
 
   async checkServerStatus(): Promise<boolean> {
+    const originalUrl = this.baseUrl;
+    
     try {
+      this.setBaseUrl(API_BASE_URL);
       await this.ping();
       console.log('[API] Primary server is online');
       return true;
@@ -85,7 +88,7 @@ class ApiService {
         return true;
       } catch (fallbackError) {
         console.log('[API] Fallback server also failed:', fallbackError);
-        this.setBaseUrl(API_BASE_URL);
+        this.setBaseUrl(originalUrl);
         return false;
       }
     }

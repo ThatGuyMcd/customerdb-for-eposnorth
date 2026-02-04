@@ -25,20 +25,39 @@ export default function LoginCard() {
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
   useEffect(() => {
-    checkServer();
+    let mounted = true;
+    
+    const checkServerSafe = async () => {
+      if (!mounted) return;
+      setServerStatus('checking');
+      const isOnline = await api.checkServerStatus();
+      if (!mounted) return;
+      console.log('[LoginCard] Server status check result:', isOnline);
+      setServerStatus(isOnline ? 'online' : 'offline');
+    };
+    
+    checkServerSafe();
+    
     const interval = setInterval(() => {
-      if (serverStatus === 'offline') {
-        checkServer();
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [serverStatus]);
+      checkServerSafe();
+    }, 15000);
+    
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const checkServer = async () => {
     setServerStatus('checking');
-    const isOnline = await api.checkServerStatus();
-    console.log('[LoginCard] Server status check result:', isOnline);
-    setServerStatus(isOnline ? 'online' : 'offline');
+    try {
+      const isOnline = await api.checkServerStatus();
+      console.log('[LoginCard] Manual server check result:', isOnline);
+      setServerStatus(isOnline ? 'online' : 'offline');
+    } catch (e) {
+      console.log('[LoginCard] Manual server check error:', e);
+      setServerStatus('offline');
+    }
   };
 
   const handlePing = async () => {
