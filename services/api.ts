@@ -49,7 +49,7 @@ class ApiService {
         'Content-Type': 'application/json',
         ...opts.headers,
       },
-      credentials: 'omit',
+      credentials: 'include',
       ...opts,
     });
 
@@ -183,7 +183,7 @@ class ApiService {
       const proxyUrl = `${this.baseUrl}/api/osrm?path=${encodeURIComponent(path)}`;
       const r = await fetch(proxyUrl, {
         headers: { Accept: 'application/json' },
-        credentials: 'omit',
+        credentials: 'include',
       });
       
       if (r.ok) {
